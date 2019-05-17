@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+    <amqp:connector name="AMQP_0_9_Connector" validateConnections="true" username="apif" password="jk5112" doc:name="AMQP-0-9 Connector"/>
+    <http:request-config name="HTTP_Request_Configuration" protocol="HTTPS" host="load2.apifortress.com" port="443" basePath="/app/api/rest/v3/" doc:name="HTTP Request Configuration"/>
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8093" basePath="/amqp" doc:name="HTTP Listener Configuration"/>
+    <flow name="amqp-api-inbound">
+        <amqp:inbound-endpoint queueName="foobar" exchangeType="topic" responseTimeout="10000" exchange-pattern="request-response" connector-ref="AMQP_0_9_Connector" doc:name="AMQP-0-9"/>
+        <byte-array-to-string-transformer doc:name="Byte Array to String"/>
+        <set-payload value="{
+  &quot;payload&quot;: &quot;#[org.apache.commons.lang3.StringEscapeUtils.escapeJson(payload)]&quot;,
+  &quot;Content-Type&quot;:&quot;application/json&quot;
+  }" doc:name="Set Payload"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <http:request config-ref="HTTP_Request_Configuration" path="df8c9e2e-25b0-49e4-95f4-5ac2a6737461455/tests/5cd0279730c49e00017d821b/run" method="POST" doc:name="HTTP"/>
+    </flow>
+    <flow name="amqp-api-outbound">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/send" doc:name="HTTP"/>
+        <set-variable variableName="queue" value="#[message.inboundProperties['x-queue']]" doc:name="queue"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <amqp:outbound-endpoint queueName="#[flowVars.queue]" responseTimeout="10000" exchange-pattern="request-response" doc:name="AMQP-0-9"/>
+    </flow>
+</mule>

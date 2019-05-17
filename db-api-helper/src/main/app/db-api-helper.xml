@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8092"  doc:name="HTTP Listener Configuration"/>
+    <db:generic-config name="Generic_Database_Configuration" url="jdbc:postgresql://localhost:5432/apipulse?password=jk5112&amp;user=apipulse" driverClassName="org.postgresql.Driver" doc:name="Generic Database Configuration">
+    </db:generic-config>
+    <flow name="db-api-select">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/db/select" doc:name="HTTP" allowedMethods="POST"/>
+        <byte-array-to-string-transformer doc:name="Byte Array to String"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <db:select config-ref="Generic_Database_Configuration" doc:name="Database">
+            <db:dynamic-query><![CDATA[select #[payload]]]></db:dynamic-query>
+        </db:select>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </flow>
+    <flow name="db-api-insert">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/db/insert" allowedMethods="POST" doc:name="HTTP"/>
+        <byte-array-to-string-transformer doc:name="Byte Array to String"/>
+        <logger level="INFO" doc:name="Logger"/>
+        <db:insert config-ref="Generic_Database_Configuration" doc:name="Database">
+            <db:dynamic-query><![CDATA[insert #[payload]]]></db:dynamic-query>
+        </db:insert>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </flow>
+    <flow name="db-api-update">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/db/update" allowedMethods="POST" doc:name="HTTP"/>
+        <byte-array-to-string-transformer doc:name="Byte Array to String"/>
+        <logger level="INFO" doc:name="Logger"/>
+        <db:update config-ref="Generic_Database_Configuration" doc:name="Database">
+            <db:dynamic-query><![CDATA[update #[payload]]]></db:dynamic-query>
+        </db:update>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </flow>
+    <flow name="db-api-delete">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/db/delete" allowedMethods="POST" doc:name="HTTP"/>
+        <byte-array-to-string-transformer doc:name="Byte Array to String"/>
+        <logger level="INFO" doc:name="Logger"/>
+        <db:delete config-ref="Generic_Database_Configuration" doc:name="Database">
+            <db:dynamic-query><![CDATA[delete #[payload]]]></db:dynamic-query>
+        </db:delete>
+        <json:object-to-json-transformer doc:name="Object to JSON"/>
+    </flow>
+</mule>

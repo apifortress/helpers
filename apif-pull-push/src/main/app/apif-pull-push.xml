@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd">
+    <http:request-config name="HTTP_Request_Configuration" protocol="HTTPS" host="mastiff.apifortress.com" port="443" basePath="/app/api/rest/v3" doc:name="HTTP Request Configuration"/>
+    <flow name="apif-pull-pushFlow">
+        <poll doc:name="Poll">
+            <fixed-frequency-scheduler frequency="10" startDelay="10" timeUnit="SECONDS"/>
+            <http:request config-ref="HTTP_Request_Configuration" path="/064e2bde-b6e9-4db9-a283-cf7378a7abfe331/insights/events" method="GET" doc:name="HTTP"/>
+        </poll>
+        <json:json-to-object-transformer returnClass="java.util.ArrayList" doc:name="JSON to Object"/>
+        <custom-transformer class="com.apifortress.mule.apifpullpush.CachedFilterProcessor" doc:name="Java"/>
+    </flow>
+</mule>
